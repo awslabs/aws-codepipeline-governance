@@ -1,0 +1,11 @@
+pytest-mock==1.12.1
+pytest-cov==2.8.1
+moto==1.3.14
+pytest==5.3.5
+bandit==1.6.2
+bandit-aws==0.0.20200316120836
+pylint==2.8.2
+tox==3.23.0
+tox-pyenv==1.1.0
+safety==1.10.3
+cfn-lint==0.49.0

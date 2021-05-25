@@ -1,0 +1,72 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+Transform: 'AWS::Serverless-2016-10-31'
+Description: AWS Shared Service to Scan and make Updates to CodePipeline (SAM)
+
+Resources:
+  # ----------
+  # DynamoDB
+  # ----------
+  rScanCodePipelineRulesDynamoDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: RuleNumber
+          AttributeType: S
+      KeySchema:
+        - AttributeName: RuleNumber
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      TableName: Scan_CodePipeline_Rules
+
+  # ---------
+  # IAM Role
+  # ---------
+  rScanCodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ScanCodePipeline
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+
+  # -----------------
+  # Lambda Function
+  # -----------------
+  rScanCodePipelineFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: main.lambda_handler
+      Runtime: python3.7
+      FunctionName: ScanCodePipeline
+      Description: This function will scan a CloudFormation template to ensure all Rules are met before updating
+        the CloudFormation Stack.
+      Timeout: 300
+      MemorySize: 256
+      Role: !GetAtt rScanCodePipelineRole.Arn
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          ROLE: ScanCodePipelineAssumedAccessRole
+          DYNAMODB_TABLE: !Ref rScanCodePipelineRulesDynamoDB
+          CFN_STACK_NAME_FORMAT: "{pipeline_name}-CodePipeline"
+      CodeUri: ../src
+
+  # --------------------------
+  # Lambda / CloudWatch Logs
+  # --------------------------
+  rScanCodePipelineFunctionLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${rScanCodePipelineFunction}"
+      RetentionInDays: 7

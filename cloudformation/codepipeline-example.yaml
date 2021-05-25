@@ -1,0 +1,194 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Creates sample CodePipeline to prove out Scan Update CodePipeline solution
+
+Resources:
+  # IAM Roles
+  rOrchestrationServiceRoles:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: Orchestration-Service
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+                - events.amazonaws.com
+                - cloudformation.amazonaws.com
+              AWS:
+                - !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCodePipeline_FullAccess
+      Policies:
+        - PolicyName: Orchestration-Service-LambdaInvoke
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: InvokeLambda
+                Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                  - iam:PassRole
+                  - cloudformation:UpdateStack
+                Resource: "*"
+
+  # KMS Key
+  rOrchestrationKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Used by CodePipeline to encrypt / decrypt artifacts
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Id: !Ref AWS::StackName
+        Statement:
+          - Sid: Allow access for Key Administrators
+            Effect: Allow
+            Principal:
+              AWS:
+                - !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - kms:*
+            Resource: "*"
+          - Sid: Allow use of the key
+            Effect: Allow
+            Principal:
+              AWS:
+                - !GetAtt rOrchestrationServiceRoles.Arn
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource: "*"
+
+  rOrchestrationKmsKeyKMSAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/orchestration-${AWS::Region}
+      TargetKeyId: !Ref rOrchestrationKmsKey
+
+  # S3
+  rOrchestrationArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub orchestration-${AWS::AccountId}-${AWS::Region}
+      AccessControl: BucketOwnerFullControl
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              KMSMasterKeyID: !Ref rOrchestrationKmsKey
+              SSEAlgorithm: aws:kms
+      VersioningConfiguration:
+        Status: Enabled
+
+  rOrchestrationArtifactBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref rOrchestrationArtifactBucket
+      PolicyDocument:
+        Statement:
+          - Sid: DenyInsecureConnections
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource: !Sub ${rOrchestrationArtifactBucket.Arn}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+          - Sid: DisableSigV2
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !Sub ${rOrchestrationArtifactBucket.Arn}/*
+              - !Sub ${rOrchestrationArtifactBucket.Arn}
+            Condition:
+              StringEquals:
+                s3:signatureversion: AWS
+          - Sid: AccessToBucket
+            Action:
+              - s3:*
+            Effect: Allow
+            Resource:
+              - !Sub ${rOrchestrationArtifactBucket.Arn}
+              - !Sub ${rOrchestrationArtifactBucket.Arn}/*
+            Principal:
+              AWS:
+                - !GetAtt rOrchestrationServiceRoles.Arn
+
+  rCodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RestartExecutionOnUpdate: True
+      ArtifactStores:
+        - Region: !Ref AWS::Region
+          ArtifactStore:
+            EncryptionKey:
+              Id: !Ref rOrchestrationKmsKey
+              Type: KMS
+            Location: !Ref rOrchestrationArtifactBucket
+            Type: S3
+      Name: Scan-Pipeline-Example
+      RoleArn: !GetAtt rOrchestrationServiceRoles.Arn
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: TemplateSource
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: S3
+                Version: "1"
+              Configuration:
+                S3Bucket: !Ref rOrchestrationArtifactBucket
+                S3ObjectKey: "application.zip"
+                PollForSourceChanges: true
+              OutputArtifacts:
+                - Name: Source
+              RunOrder: 1
+        - Name: BuildAndPackage
+          Actions:
+            - Name: Scan-CodePipeline
+              ActionTypeId:
+                Category: Invoke
+                Owner: AWS
+                Provider: Lambda
+                Version: "1"
+              InputArtifacts:
+                - Name: Source
+              Configuration:
+                FunctionName: ScanCodePipeline
+                UserParameters: |
+                  {
+                    "cfn_template": "cloudformation/codepipeline-example.yaml"
+                  }
+              RunOrder: 1
+            - Name: Update-CodePipeline
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: "1"
+                Provider: CloudFormation
+              InputArtifacts:
+                - Name: Source
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                RoleArn: !GetAtt rOrchestrationServiceRoles.Arn
+                Capabilities: CAPABILITY_NAMED_IAM
+                StackName: !Ref AWS::StackName
+                TemplatePath: Source::cloudformation/codepipeline-example.yaml
+              RunOrder: 2

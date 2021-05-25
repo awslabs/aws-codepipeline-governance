@@ -1,0 +1,134 @@
+{
+    "RestartExecutionOnUpdate": true,
+    "ArtifactStores": [
+        {
+            "Region": {
+                "Ref": "AWS::Region"
+            },
+            "ArtifactStore": {
+                "EncryptionKey": {
+                    "Id": "00000000-1111-2222-3333-444444444444",
+                    "Type": "KMS"
+                },
+                "Location": "orchestration-000000000000-us-east-1",
+                "Type": "S3"
+            }
+        }
+    ],
+    "Name": "Scan-Pipeline-Example",
+    "RoleArn": "arn:aws:iam::000000000000:role/Orchestration-Service",
+    "Stages": [
+        {
+            "Name": "Source",
+            "Actions": [
+                {
+                    "Name": "TemplateSource",
+                    "ActionTypeId": {
+                        "Category": "Source",
+                        "Owner": "AWS",
+                        "Provider": "S3",
+                        "Version": "1"
+                    },
+                    "Configuration": {
+                        "S3Bucket": "orchestration-000000000000-us-east-1",
+                        "S3ObjectKey": "application.zip",
+                        "PollForSourceChanges": true
+                    },
+                    "OutputArtifacts": [
+                        {
+                            "Name": "Source"
+                        }
+                    ],
+                    "RunOrder": 1
+                }
+            ]
+        },
+        {
+            "Name": "BuildAndPackage",
+            "Actions": [
+                {
+                    "Name": "Update-CodePipeline",
+                    "ActionTypeId": {
+                        "Category": "Deploy",
+                        "Owner": "AWS",
+                        "Version": "1",
+                        "Provider": "CloudFormation"
+                    },
+                    "InputArtifacts": [
+                        {
+                            "Name": "Source"
+                        }
+                    ],
+                    "Configuration": {
+                        "ActionMode": "CREATE_UPDATE",
+                        "RoleArn": "arn:aws:iam::000000000000:role/Orchestration-Service",
+                        "Capabilities": "CAPABILITY_NAMED_IAM",
+                        "StackName": {
+                            "Ref": "AWS::StackName"
+                        },
+                        "TemplatePath": "Source::cloudformation/codepipeline-example.yaml"
+                    },
+                    "RunOrder": 2
+                }
+            ]
+        },
+        {
+            "Name": "Test",
+            "Actions": [
+                {
+                    "Name": "Deploy-Code",
+                    "ActionTypeId": {
+                        "Category": "Deploy",
+                        "Owner": "AWS",
+                        "Version": "1",
+                        "Provider": "CloudFormation"
+                    },
+                    "InputArtifacts": [
+                        {
+                            "Name": "Source"
+                        }
+                    ],
+                    "Configuration": {
+                        "ActionMode": "CREATE_UPDATE",
+                        "RoleArn": "arn:aws:iam::000000000000:role/Orchestration-Service",
+                        "Capabilities": "CAPABILITY_NAMED_IAM",
+                        "StackName": {
+                            "Ref": "AWS::StackName"
+                        },
+                        "TemplatePath": "Source::cloudformation/codepipeline-example.yaml"
+                    },
+                    "RunOrder": 1
+                }
+            ]
+        },
+        {
+            "Name": "Prod",
+            "Actions": [
+                {
+                    "Name": "Deploy-Code",
+                    "ActionTypeId": {
+                        "Category": "Deploy",
+                        "Owner": "AWS",
+                        "Version": "1",
+                        "Provider": "CloudFormation"
+                    },
+                    "InputArtifacts": [
+                        {
+                            "Name": "Source"
+                        }
+                    ],
+                    "Configuration": {
+                        "ActionMode": "CREATE_UPDATE",
+                        "RoleArn": "arn:aws:iam::000000000000:role/Orchestration-Service",
+                        "Capabilities": "CAPABILITY_NAMED_IAM",
+                        "StackName": {
+                            "Ref": "AWS::StackName"
+                        },
+                        "TemplatePath": "Source::cloudformation/codepipeline-example.yaml"
+                    },
+                    "RunOrder": 1
+                }
+            ]
+        }
+    ]
+}

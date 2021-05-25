@@ -1,0 +1,36 @@
+RuleNumber: "001"
+PatternType: "All"
+Contents:
+  Stages:
+    - Name: BuildAndPackage
+      Actions:
+        - Name: Scan-CodePipeline
+          ActionTypeId:
+            Category: Invoke
+            Owner: AWS
+            Provider: Lambda
+            Version: "1"
+          Configuration:
+            FunctionName: ScanCodePipeline
+            UserParameters: |
+              {
+                "cfn_template": "cloudformation/codepipeline-example.yaml"
+              }
+          InputArtifacts:
+            - Name: Source
+          RunOrder: 1
+        - Name: Update-CodePipeline
+          ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Version: "1"
+            Provider: CloudFormation
+          InputArtifacts:
+            - Name: Source
+          Configuration:
+            ActionMode: CREATE_UPDATE
+            Capabilities: CAPABILITY_NAMED_IAM
+            TemplatePath: Source::cloudformation/codepipeline-example.yaml
+          RunOrder: 2
+
+

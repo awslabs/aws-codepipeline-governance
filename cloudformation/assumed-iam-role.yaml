@@ -1,0 +1,35 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploys CodePipeline role to allow the solution to assume into an account.
+
+Parameters:
+  pScanCodePipelineAccount:
+    Type: String
+    Default: ""
+
+Conditions:
+  cNoScanCodePipelineAccount:
+    !Not [!Equals [!Ref pScanCodePipelineAccount, ""]]
+
+Resources:
+  rScanCodePipelineAssumedRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ScanCodePipelineAssumedAccessRole
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                - !If
+                  - cNoScanCodePipelineAccount
+                  - !Sub arn:aws:iam::${pScanCodePipelineAccount}:role/ScanCodePipeline
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/ScanCodePipeline
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCodePipeline_FullAccess

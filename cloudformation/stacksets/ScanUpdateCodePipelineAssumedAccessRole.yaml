@@ -1,0 +1,88 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploys a Pipeline Factory Role into each account to execute actions in that account.
+
+Parameters:
+  pManagementAccount:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: "/metabase/management/global/accounts/management-id"
+  pSharedServicesProdAccount:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: "/metabase/management/global/accounts/shared-services-prod-id"
+  pSharedServicesDeplAccount:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: "/metabase/management/global/accounts/shared-services-depl-id"
+  pOrganizationalUnitIds:
+    Type: 'CommaDelimitedList'
+    Default: "ou-1234-56789012,ou-0987-65432109"
+
+Resources:
+  rScanUpdateCodePipelineAssumedRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ScanUpdateCodePipelineAssumedAccessRole
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                - !Sub arn:aws:iam::${pScanUpdateCodePipelineAccount}:role/ScanUpdate-CodePipeline
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCodePipeline_FullAccess
+
+  rStackSetPipelineFactoryAssumedAccessRole:
+    Type: AWS::CloudFormation::StackSet
+    Properties:
+      AutoDeployment:
+        Enabled: true
+        RetainStacksOnAccountRemoval: true
+      Capabilities:
+        - CAPABILITY_NAMED_IAM
+      Description: "IAM Role Deployment for PipelineFactory to assume into other accounts"
+      OperationPreferences:
+        MaxConcurrentCount: 10
+      Parameters:
+        - ParameterKey: pManagementAccount
+          ParameterValue: !Ref pManagementAccount
+        - ParameterKey: pSharedServicesProdAccount
+          ParameterValue: !Ref pSharedServicesProdAccount
+        - ParameterKey: pSharedServicesDeplAccount
+          ParameterValue: !Ref pSharedServicesDeplAccount
+      PermissionModel: SERVICE_MANAGED
+      StackInstancesGroup:
+        - Regions:
+            - !Ref AWS::Region
+          DeploymentTargets:
+            OrganizationalUnitIds: !Ref pOrganizationalUnitIds
+      StackSetName: ScanUpdateCodePipeline-AssumedAccess-Role
+      TemplateBody: |
+        AWSTemplateFormatVersion: '2010-09-09'
+        Description: Deploys a role into the account to execute actions in that account
+
+        Parameters:
+          pScanUpdateCodePipelineAccount:
+            Type: 'String'
+
+        Resources:
+          rScanUpdateCodePipelineAssumedRole:
+            Type: AWS::IAM::Role
+            Properties:
+              RoleName: ScanUpdateCodePipelineAssumedAccessRole
+              Path: "/"
+              AssumeRolePolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                  - Effect: Allow
+                    Principal:
+                      AWS:
+                        - !Sub arn:aws:iam::${pScanUpdateCodePipelineAccount}:role/ScanUpdateCodePipeline
+                    Action:
+                      - sts:AssumeRole
+              ManagedPolicyArns:
+                - arn:aws:iam::aws:policy/AWSCodePipeline_FullAccess
