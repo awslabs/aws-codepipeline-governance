@@ -4,7 +4,7 @@ set -e
 
 # Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
-
+BASE=$(basename $PWD)
 echo "#--------------------------------------------------------#"
 echo "#          Building SAM Packages for ${BASE}              "
 echo "#--------------------------------------------------------#"
@@ -21,7 +21,7 @@ KMS=$(aws s3api get-bucket-encryption \
 
 echo "Deploying Serverless Application Function"
 
-sam build -t ../cloudformation/function.yaml --use-container --region "${region}"
+sam build -t cloudformation/function.yaml --use-container --region "${region}"
 
 sam package \
   --template-file .aws-sam/build/template.yaml \
@@ -29,9 +29,10 @@ sam package \
   --s3-prefix "SAM" \
   --kms-key-id "${KMS}" \
   --region "${region}" \
-  --output-template-file ../cloudformation/generated-sam-template.yaml
+  --output-template-file cloudformation/generated-sam-template.yaml
 
 sam deploy \
   --stack-name ScanCodePipeline \
-  --template-file ../cloudformation/generated-sam-template.yaml \
-  --capabilities CAPABILITY_NAMED_IAM
+  --template-file cloudformation/generated-sam-template.yaml \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --no-fail-on-empty-changeset

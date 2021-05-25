@@ -39,8 +39,7 @@ allows the Security or Governance teams to mandate certain stages and/or actions
 
 - Deploy Serverless Application Model function.
   ```bash
-  cd scripts
-  bash ./sam.sh
+  bash ./scripts/sam.sh
   ````
  
 ### AWS Deployment Account (account where CodePipeline will be deployed)
