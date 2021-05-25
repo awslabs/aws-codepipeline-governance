@@ -43,7 +43,8 @@ allows the Security or Governance teams to mandate certain stages and/or actions
   ````
  
 ### AWS Deployment Account (account where CodePipeline will be deployed)
-- IAM Role for function to assume and update CodePipeline after scanning it
+- IAM Role for function to assume and update CodePipeline after scanning it 
+  - #### Note: ParameterValue= Account ID where solution was deployed to
   ```bash
   aws cloudformation create-stack --stack-name ScanCodePipelineAssumedRole --template-body file://cloudformation/assumed-iam-role.yaml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=pScanCodePipelineAccount,ParameterValue=xxxxxxxxxxx
   ````
@@ -93,6 +94,7 @@ allows the Security or Governance teams to mandate certain stages and/or actions
   ```
   
 - Deploy Initial DynamoDB Item into the Scan_CodePipeline_Rules Table
+  - #### Note: Run in account where solution was deployed to
   ```bash
   aws dynamodb put-item --table-name Scan_CodePipeline_Rules --item file://initial-dynamodb-item.json
   ```
