@@ -5,9 +5,6 @@ Ensure all AWS CodePipelines have mandatory actions being run in the Orchestrati
 This solution will be initiated through a pipeline action and will parse through the CodePipeline CloudFormation template to ensure all governance rules are met before updating the CloudFormation Stack.  This 
 allows the Security or Governance teams to mandate certain stages and/or actions to being ran in a particular order.  But more importantly, this will allow developers to update their own CI/CD Pipeline.  
 
-### AWS Resource Diagram
-![alt text](images/architecture-diagram.png) 
-
 ### Folder Structure
 | Folder/File | Description |  
 | :-------------------------| :-------------------------------------------------------------------------------------------------------------------|
@@ -29,19 +26,21 @@ allows the Security or Governance teams to mandate certain stages and/or actions
 - Install the Serverless Application Model CLI (SAM) [Link to AWS Doc](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
   - Since this solution builds the SAM function inside Lambda-like container, Docker must be installed and running on your workstation.
 
-## Assumptions 
-- Using AWS Organizations
-- Using Shared Service Account for centralized Lambda Functions
-
 ## How to deploy
 There are 2 ways of deploying the CodePipeline Governance solution. 
 
-The first deployment method uses AWS Organizations and Centralized Shared Services account to manage the CodePipeline Governance Lambda Function. 
+The *first deployment* method uses AWS Organizations and Centralized Shared Services account to manage the CodePipeline Governance Lambda Function. 
 This method allows other AWS Accounts within the Organization the ability to call the Lambda Function using a specific IAM Role. This eases the 
 management of the CodePipeline Governance Lambda Function and enables CodePipeline's within multiple AWS Accounts to invoke the function. 
 
-The second deployment method installs the CodePipeline Governance Lambda Function in the same account as your deployment of AWS CodePipeline.  This 
+### Separate Account AWS Resource Diagram
+![alt text](images/separate-account-arch-diag.png) 
+
+The *second deployment* method installs the CodePipeline Governance Lambda Function in the same account as your deployment of AWS CodePipeline.  This 
 method is typically chosen when a Centralized Shared Services account or AWS Organization isn't used.  
+
+### Single Account AWS Resource Diagram
+![alt text](images/single-account-arch-diag.png) 
 
 ### AWS Management or Shared Services Production Account
 - Run the cloudformation/sam-bootstrap.yaml into the AWS Account you chose.
