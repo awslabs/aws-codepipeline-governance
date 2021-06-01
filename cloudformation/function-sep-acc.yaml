@@ -4,6 +4,14 @@
 Transform: 'AWS::Serverless-2016-10-31'
 Description: AWS Shared Service to Scan and make Updates to CodePipeline (SAM)
 
+Parameters:
+  pPrincipalOrgID:
+    Type: String
+    Default: ""
+  pCodePipelineServiceRole:
+    Type: String
+    Default: ""
+
 Resources:
   # ----------
   # DynamoDB
@@ -37,21 +45,19 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
-      Policies:
-        - PolicyName: ScanCodePipelineFunction
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Sid: ScanCodePipelineFunction
-                Effect: Allow
-                Action:
-                  - codepipeline:PutJobFailureResult
-                  - codepipeline:PutJobSuccessResult
-                  - codepipeline:GetPipeline
-                  - kms:Decrypt
-                  - logs:CreateLogStream
-                  - sts:AssumeRole
-                Resource: "*"
+          - Effect: Allow
+            Principal:
+              AWS: "*"
+            Action:
+              - sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:PrincipalOrgID: !Ref pPrincipalOrgID
+              ForAnyValue:StringLike:
+                aws:PrincipalARN:
+                  - !Sub arn:aws:iam::*:role/${pCodePipelineServiceRole}
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
 
   # -----------------
   # Lambda Function

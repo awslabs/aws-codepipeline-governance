@@ -31,5 +31,15 @@ Resources:
                   - !Sub arn:aws:iam::${AWS::AccountId}:role/ScanCodePipeline
             Action:
               - sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSCodePipeline_FullAccess
+      Policies:
+        - PolicyName: ScanCodePipelineAssumedRole-CodePipelineStatus
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: InvokeLambda
+                Effect: Allow
+                Action:
+                  - codepipeline:PutJobFailureResult
+                  - codepipeline:PutJobSuccessResult
+                  - codepipeline:GetPipeline
+                Resource: "*"

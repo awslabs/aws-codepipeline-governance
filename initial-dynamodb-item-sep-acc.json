@@ -1,0 +1,124 @@
+{
+  "RuleNumber": {
+    "S": "001"
+  },
+  "PatternType": {
+    "S": "All"
+  },
+  "Contents": {
+    "M": {
+      "Stages": {
+        "L": [
+          {
+            "M": {
+              "Name": {
+                "S": "BuildAndPackage"
+              },
+              "Actions": {
+                "L": [
+                  {
+                    "M": {
+                      "Name": {
+                        "S": "Scan-CodePipeline"
+                      },
+                      "ActionTypeId": {
+                        "M": {
+                          "Category": {
+                            "S": "Invoke"
+                          },
+                          "Owner": {
+                            "S": "AWS"
+                          },
+                          "Provider": {
+                            "S": "Lambda"
+                          },
+                          "Version": {
+                            "S": "1"
+                          }
+                        }
+                      },
+                      "Configuration": {
+                        "M": {
+                          "FunctionName": {
+                            "S": "ScanCodePipeline"
+                          },
+                          "UserParameters": {
+                            "S": "{\n  \"cfn_template\": \"cloudformation/codepipeline-sep-acc-example.yaml\"\n}\n"
+                          }
+                        }
+                      },
+                      "InputArtifacts": {
+                        "L": [
+                          {
+                            "M": {
+                              "Name": {
+                                "S": "Source"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "RunOrder": {
+                        "N": "1"
+                      }
+                    }
+                  },
+                  {
+                    "M": {
+                      "Name": {
+                        "S": "Update-CodePipeline"
+                      },
+                      "ActionTypeId": {
+                        "M": {
+                          "Category": {
+                            "S": "Deploy"
+                          },
+                          "Owner": {
+                            "S": "AWS"
+                          },
+                          "Version": {
+                            "S": "1"
+                          },
+                          "Provider": {
+                            "S": "CloudFormation"
+                          }
+                        }
+                      },
+                      "InputArtifacts": {
+                        "L": [
+                          {
+                            "M": {
+                              "Name": {
+                                "S": "Source"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "Configuration": {
+                        "M": {
+                          "ActionMode": {
+                            "S": "CREATE_UPDATE"
+                          },
+                          "Capabilities": {
+                            "S": "CAPABILITY_NAMED_IAM"
+                          },
+                          "TemplatePath": {
+                            "S": "Source::cloudformation/codepipeline-sep-acc-example.yaml"
+                          }
+                        }
+                      },
+                      "RunOrder": {
+                        "N": "2"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
