@@ -60,9 +60,14 @@ Resources:
               - Sid: ScanCodePipelineAssumeRole
                 Effect: Allow
                 Action:
-                  - sts:AssumedRole
+                  - sts:AssumeRole
                 Resource:
                   - !Sub arn:aws:iam::${pScanCodePipelineAccount}:role/ScanCodePipeline
+              - Sid: PassRole
+                Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/Orchestration-Service
 
   # KMS Key
   rOrchestrationKmsKey:
@@ -219,4 +224,8 @@ Resources:
                 Capabilities: CAPABILITY_NAMED_IAM
                 StackName: !Ref AWS::StackName
                 TemplatePath: Source::cloudformation/codepipeline-sep-acc-example.yaml
+                ParameterOverrides: !Sub |
+                  {
+                    "pScanCodePipelineAccount": "${pScanCodePipelineAccount}"
+                  }
               RunOrder: 2

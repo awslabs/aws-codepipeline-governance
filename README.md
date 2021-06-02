@@ -177,7 +177,7 @@ CodePipeline action output of CloudFormation Security Scan
 - Option 1) Deploy CodePipeline (w/ dependencies) CloudFormation template
   - Replace "123456789012" with AWS Account where the ScanCodePipeline Lambda Function was deployed
   ```bash
-  aws cloudformation create-stack --stack-name ScanCodePipelineExample --template-body file://cloudformation/codepipeline-sep-acc-example.yaml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=pScanCodePipelineManagementAccount,ParameterValue=123456789012 
+  aws cloudformation create-stack --stack-name ScanCodePipelineExample --template-body file://cloudformation/codepipeline-sep-acc-example.yaml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=pScanCodePipelineAccount,ParameterValue=123456789012 
   ```
 
 - Option 2) Deploy CodePipeline (w/ dependencies) CloudFormation template
