@@ -29,18 +29,18 @@ allows the Security or Governance teams to mandate certain stages and/or actions
 ## How to deploy
 There are 2 ways of deploying the CodePipeline Governance solution. 
 
+### Separate Account AWS Resource Diagram (Option 1)
+![alt text](images/separate-account-arch-diag.png) 
+
 The *first deployment* method uses AWS Organizations and Centralized Shared Services account to manage the CodePipeline Governance Lambda Function. 
 This method allows other AWS Accounts within the Organization the ability to call the Lambda Function using a specific IAM Role. This eases the 
 management of the CodePipeline Governance Lambda Function and enables CodePipeline's within multiple AWS Accounts to invoke the function. 
 
-### Separate Account AWS Resource Diagram
-![alt text](images/separate-account-arch-diag.png) 
+### Single Account AWS Resource Diagram (Option 2)
+![alt text](images/single-account-arch-diag.png) 
 
 The *second deployment* method installs the CodePipeline Governance Lambda Function in the same account as your deployment of AWS CodePipeline.  This 
 method is typically chosen when a Centralized Shared Services account or AWS Organization isn't used.  
-
-### Single Account AWS Resource Diagram
-![alt text](images/single-account-arch-diag.png) 
 
 ### AWS Management or Shared Services Production Account
 - Run the cloudformation/sam-bootstrap.yaml into the AWS Account you chose.
@@ -65,12 +65,18 @@ method is typically chosen when a Centralized Shared Services account or AWS Org
   ````
  
 ### AWS Deployment Account (account where CodePipeline will be deployed)
-- IAM Role for function to assume and update CodePipeline after scanning it 
-  - #### Note: ParameterValue= Account ID where solution was deployed to
-  ```bash
-  aws cloudformation create-stack --stack-name ScanCodePipelineAssumedRole --template-body file://cloudformation/assumed-iam-role.yaml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=pScanCodePipelineAccount,ParameterValue=xxxxxxxxxxx
-  ````
-
+- This deploys an IAM Role for the Lambda Function to assume back into the Pipeline Account to reposond with the CodePipeline Status (Success | Failure)
+  - Option 1) 
+    - Replace "123456789012" with AWS Account where the ScanCodePipeline Lambda Function was deployed
+    ```bash
+    aws cloudformation create-stack --stack-name ScanCodePipelineAssumedRole --template-body file://cloudformation/assumed-iam-role.yaml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=pScanCodePipelineAccount,ParameterValue=123456789012
+    ````
+    
+  - Option 2) 
+    ```bash
+    aws cloudformation create-stack --stack-name ScanCodePipelineAssumedRole --template-body file://cloudformation/assumed-iam-role.yaml --capabilities CAPABILITY_NAMED_IAM
+    ````
+    
 ## Deploy New / Update CodePipeline Governance Rules
 - Create a yaml file with the CodePipeline Stage or Actions you wish to act as the Rule for the CodePipeline CloudFormation Template.
     - There is an example of a Rule located in *scripts/convert-2-dynamodb-item.yaml*. This example Rule ensures that the Scan Action doesn't get removed from the CodePipeline Template.

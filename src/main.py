@@ -27,10 +27,14 @@ def lambda_handler(event, context):
 
     try:
         # Set assumed role
-        credentials = assume_role(account_number=dest_account, role_name=os.environ['ROLE'])
-        session = boto3_session(credentials=credentials)
+        if dest_account != os.environ['CURRENT_ACCOUNT']:
+            credentials = assume_role(account_number=dest_account, role_name=os.environ['ROLE'])
+            session = boto3_session(credentials=credentials)
+        else:
+            session = boto3_session()
 
     except Exception as e:
+        logger.error(f"Unable to assume role {os.environ['ROLE']}")
         session = boto3_session(credentials=job_data['artifactCredentials'])
         put_job_failure(job_id=job_id, message=str(e), session=session)
 

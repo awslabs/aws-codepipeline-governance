@@ -11,3 +11,4 @@ htmlcov/
 coverage.xml
 junitxml.xml
 *.zip
+logs/*

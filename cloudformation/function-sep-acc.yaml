@@ -56,8 +56,33 @@ Resources:
               ForAnyValue:StringLike:
                 aws:PrincipalARN:
                   - !Sub arn:aws:iam::*:role/${pCodePipelineServiceRole}
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess
+      Policies:
+        - PolicyName: ScanCodePipelineFunction
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: RunFunction
+                Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                  - codepipeline:PutJobFailureResult
+                  - codepipeline:PutJobSuccessResult
+                  - codepipeline:GetPipeline
+                  - kms:Decrypt
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                  - s3:GetObject
+                  - dynamodb:Scan
+                Resource: "*"
+              - Sid: AssumeRole
+                Effect: Allow
+                Action:
+                  - sts:AssumeRole
+                Resource:
+                  - arn:aws:iam::*:role/ScanCodePipelineAssumedAccessRole
 
   # -----------------
   # Lambda Function
@@ -75,10 +100,9 @@ Resources:
       Role: !GetAtt rScanCodePipelineRole.Arn
       Environment:
         Variables:
-          REGION: !Ref AWS::Region
           ROLE: ScanCodePipelineAssumedAccessRole
           DYNAMODB_TABLE: !Ref rScanCodePipelineRulesDynamoDB
-          CFN_STACK_NAME_FORMAT: "{pipeline_name}-CodePipeline"
+          CURRENT_ACCOUNT: !Ref AWS::AccountId
       CodeUri: ../src
 
   # --------------------------
