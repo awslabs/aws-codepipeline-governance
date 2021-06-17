@@ -8,10 +8,11 @@ import shutil
 import yaml
 from dynamodb_helper import scan_dynamodb
 
+log_level = os.getenv('LOG_LEVEL', 'INFO')
 logging.basicConfig()
 logger = logging.getLogger()
 logging.getLogger("botocore").setLevel(logging.ERROR)
-logger.setLevel(logging.INFO)
+logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
 
 
 def check_codepipeline_cfn_template(template):
@@ -38,10 +39,9 @@ def check_codepipeline_cfn_template(template):
         results.append("NoItemsFound")
         return results
 
-    yaml.add_multi_constructor('!', lambda l, suffix, node: None)
+    yaml.SafeLoader.add_multi_constructor('!', lambda l, suffix, node: None)
     with open(template, 'r') as stream:
-        _json = yaml.load(stream, Loader=yaml.Loader)
-        # _json = yaml.safe_load(stream)   # <-- ISSUE: could not determine a constructor for the tag '!Sub'
+        _json = yaml.safe_load(stream)
 
     # Make sure current cfn file has CodePipeline in it
     for _key, _value in _json['Resources'].items():

@@ -10,10 +10,11 @@ from s3_helper import download_file_from_pipeline_s3
 from sts_helper import assume_role
 from client_session_helper import boto3_session
 
+log_level = os.getenv('LOG_LEVEL', 'INFO')
 logging.basicConfig()
 logger = logging.getLogger()
 logging.getLogger("botocore").setLevel(logging.ERROR)
-logger.setLevel(logging.INFO)
+logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
 
 
 def lambda_handler(event, context):
