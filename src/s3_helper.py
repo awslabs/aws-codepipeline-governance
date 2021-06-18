@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import time
+import tempfile
 import random
 import zipfile
 import logging
@@ -36,20 +37,21 @@ def download_file_from_pipeline_s3(job_data, artifact, file_in_zip):
     bucket = artifact['location']['s3Location']['bucketName']
     artifact_path = artifact['location']['s3Location']['objectKey']
     zip_file = artifact_path.split('/')[2]
-    temp_dir = '/tmp/' + str(random.randint(1, 9999)) + '/'
+
+    tmp_dirname = tempfile.mkdtemp()
 
     try:
         logger.debug(f'Downloading {artifact_path} from S3 Bucket ({bucket})...')
         _response = s3_download_file(
             bucket_name=bucket,
             input_file_name=artifact_path,
-            output_file_name=f"/tmp/{zip_file}",
+            output_file_name=f"{tmp_dirname}/{zip_file}",
             session=session
         )
-        with zipfile.ZipFile('/tmp/' + zip_file, "r") as z:
-            z.extract(file_in_zip, temp_dir)
+        with zipfile.ZipFile(f"{tmp_dirname}/{zip_file}", "r") as z:
+            z.extract(file_in_zip, tmp_dirname)
 
-        return str(temp_dir + file_in_zip)
+        return str(f"{tmp_dirname}/{zip_file}")
 
     except (KeyError, AttributeError, OSError) as e:
         logger.error(f'Something went wrong trying to download file. {e}')
