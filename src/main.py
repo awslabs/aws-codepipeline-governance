@@ -4,18 +4,14 @@
 import json
 import tempfile
 import os
-import logging
+from custom_logging import CustomLogger
 from helper import check_codepipeline_cfn_template, get_user_params, cleanup_temp
 from cp_helper import put_job_success, put_job_failure
 from s3_helper import download_file_from_pipeline_s3
 from sts_helper import assume_role
 from client_session_helper import boto3_session
 
-log_level = os.getenv('LOG_LEVEL', 'INFO')
-logging.basicConfig()
-logger = logging.getLogger()
-logging.getLogger("botocore").setLevel(logging.ERROR)
-logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
+logger = CustomLogger().logger
 
 
 def lambda_handler(event, context):

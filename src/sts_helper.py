@@ -2,14 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-import logging
+from custom_logging import CustomLogger
 from client_session_helper import boto3_client
 
-log_level = os.getenv('LOG_LEVEL', 'INFO')
-logging.basicConfig()
-logger = logging.getLogger()
-logging.getLogger("botocore").setLevel(logging.ERROR)
-logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
+logger = CustomLogger().logger
 
 function_name = os.environ['AWS_LAMBDA_FUNCTION_NAME']
 

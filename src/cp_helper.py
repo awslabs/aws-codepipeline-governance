@@ -1,15 +1,10 @@
 # Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-import os
-import logging
+from custom_logging import CustomLogger
 from client_session_helper import boto3_client
 
-log_level = os.getenv('LOG_LEVEL', 'INFO')
-logging.basicConfig()
-logger = logging.getLogger()
-logging.getLogger("botocore").setLevel(logging.ERROR)
-logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
+logger = CustomLogger().logger
 
 
 def put_job_success(job_id, message, session=None):

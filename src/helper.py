@@ -2,17 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-import logging
 import json
 import shutil
 import yaml
+from custom_logging import CustomLogger
 from dynamodb_helper import scan_dynamodb
 
-log_level = os.getenv('LOG_LEVEL', 'INFO')
-logging.basicConfig()
-logger = logging.getLogger()
-logging.getLogger("botocore").setLevel(logging.ERROR)
-logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
+logger = CustomLogger().logger
 
 
 def check_codepipeline_cfn_template(template):

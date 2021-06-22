@@ -6,7 +6,7 @@ import os
 
 
 class CustomLogger (object):
-    """Sets up customer logger for all lambda functions
+    """Sets up custom logger for lambda functions
 
     Args:
         object (str): Lambda Event
@@ -14,7 +14,7 @@ class CustomLogger (object):
     Returns:
         class:
     """
-    def __init__(self, event=None):
+    def __init__(self):
         log_level = os.getenv('LOG_LEVEL', 'INFO')
         self._logger = logging.getLogger()
         self._logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
