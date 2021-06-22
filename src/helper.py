@@ -8,10 +8,11 @@ import shutil
 import yaml
 from dynamodb_helper import scan_dynamodb
 
+log_level = os.getenv('LOG_LEVEL', 'INFO')
 logging.basicConfig()
 logger = logging.getLogger()
 logging.getLogger("botocore").setLevel(logging.ERROR)
-logger.setLevel(logging.INFO)
+logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
 
 
 def check_codepipeline_cfn_template(template):
@@ -38,10 +39,9 @@ def check_codepipeline_cfn_template(template):
         results.append("NoItemsFound")
         return results
 
-    yaml.add_multi_constructor('!', lambda l, suffix, node: None)
+    yaml.SafeLoader.add_multi_constructor('!', lambda l, suffix, node: None)
     with open(template, 'r') as stream:
-        _json = yaml.load(stream, Loader=yaml.Loader)
-        # _json = yaml.safe_load(stream)   # <-- ISSUE: could not determine a constructor for the tag '!Sub'
+        _json = yaml.safe_load(stream)
 
     # Make sure current cfn file has CodePipeline in it
     for _key, _value in _json['Resources'].items():
@@ -247,12 +247,19 @@ def get_user_params(job_data, required_param_list):
     return decoded_parameters
 
 
-def cleanup_temp():
-    temp_dir = '/tmp'
-    for f in os.listdir(temp_dir):
-        logger.info('Removing {} from {}'.format(f, temp_dir))
-        if os.path.isdir(f"{temp_dir}/{f}"):
-            shutil.rmtree(f"{temp_dir}/{f}")
+def cleanup_temp(temp_location):
+    """This will cleanup a temporary location
+
+    Args:
+        temp_location (str): Directory location to remove files/directories
+
+    Returns:
+        N/A
+    """
+    for f in os.listdir(temp_location):
+        logger.info('Removing {} from {}'.format(f, temp_location))
+        if os.path.isdir(f"{temp_location}/{f}"):
+            shutil.rmtree(f"{temp_location}/{f}")
 
         else:
-            os.remove(os.path.join(temp_dir, f))
+            os.remove(os.path.join(temp_location, f))

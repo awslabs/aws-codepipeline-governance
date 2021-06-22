@@ -1,26 +1,27 @@
 # Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 import time
-import tempfile
-import random
 import zipfile
 import logging
 from client_session_helper import boto3_client, boto3_session
 
+log_level = os.getenv('LOG_LEVEL', 'INFO')
 logging.basicConfig()
 logger = logging.getLogger()
 logging.getLogger("botocore").setLevel(logging.ERROR)
-logger.setLevel(logging.INFO)
+logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
 
 
-def download_file_from_pipeline_s3(job_data, artifact, file_in_zip):
+def download_file_from_pipeline_s3(job_data, artifact, file_in_zip, download_dir):
     """Pulls artifact credentials from job_data then downloads specific file from the artifact to /tmp
 
     Args:
         job_data (dict): Job_data section of pipeline event
         artifact (dict): Artifact object from pipeline to pull file from
         file_in_zip (str): File within the artifact dict to download
+        download_dir (str): Temporary directory to download file to
 
     Returns:
         str: Full path to the downloaded file
@@ -38,20 +39,18 @@ def download_file_from_pipeline_s3(job_data, artifact, file_in_zip):
     artifact_path = artifact['location']['s3Location']['objectKey']
     zip_file = artifact_path.split('/')[2]
 
-    tmp_dirname = tempfile.mkdtemp()
-
     try:
         logger.debug(f'Downloading {artifact_path} from S3 Bucket ({bucket})...')
         _response = s3_download_file(
             bucket_name=bucket,
             input_file_name=artifact_path,
-            output_file_name=f"{tmp_dirname}/{zip_file}",
+            output_file_name=f"{download_dir}/{zip_file}",
             session=session
         )
-        with zipfile.ZipFile(f"{tmp_dirname}/{zip_file}", "r") as z:
-            z.extract(file_in_zip, tmp_dirname)
+        with zipfile.ZipFile(f"{download_dir}/{zip_file}", "r") as z:
+            z.extract(file_in_zip, download_dir)
 
-        return str(f"{tmp_dirname}/{zip_file}")
+        return str(f"{download_dir}/{file_in_zip}")
 
     except (KeyError, AttributeError, OSError) as e:
         logger.error(f'Something went wrong trying to download file. {e}')

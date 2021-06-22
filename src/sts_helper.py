@@ -5,10 +5,11 @@ import os
 import logging
 from client_session_helper import boto3_client
 
+log_level = os.getenv('LOG_LEVEL', 'INFO')
 logging.basicConfig()
 logger = logging.getLogger()
 logging.getLogger("botocore").setLevel(logging.ERROR)
-logger.setLevel(logging.INFO)
+logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
 
 function_name = os.environ['AWS_LAMBDA_FUNCTION_NAME']
 

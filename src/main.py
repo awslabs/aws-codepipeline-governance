@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
+import tempfile
 import os
 import logging
 from helper import check_codepipeline_cfn_template, get_user_params, cleanup_temp
@@ -10,10 +11,11 @@ from s3_helper import download_file_from_pipeline_s3
 from sts_helper import assume_role
 from client_session_helper import boto3_session
 
+log_level = os.getenv('LOG_LEVEL', 'INFO')
 logging.basicConfig()
 logger = logging.getLogger()
 logging.getLogger("botocore").setLevel(logging.ERROR)
-logger.setLevel(logging.INFO)
+logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
 
 
 def lambda_handler(event, context):
@@ -47,10 +49,12 @@ def lambda_handler(event, context):
 
         # Get CloudFormation files from s3
         logger.info("Get CloudFormation Template file from CodePipeline - S3")
+        tmp_dirname = tempfile.mkdtemp()
         template_location = download_file_from_pipeline_s3(
             job_data=job_data,
             artifact=artifacts[0],
-            file_in_zip=params['cfn_template']
+            file_in_zip=params['cfn_template'],
+            download_dir=tmp_dirname
         )
 
         if template_location:
@@ -69,4 +73,4 @@ def lambda_handler(event, context):
 
     finally:
         # Clean up the /tmp folder to avoid overlap on subsequent runs
-        cleanup_temp()
+        cleanup_temp(temp_location=tmp_dirname)

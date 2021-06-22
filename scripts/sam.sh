@@ -28,9 +28,11 @@ echo "#-------------------------------------------------------------#"
 echo "#     Building SAM Packages for ${BASE}                        "
 echo "#-------------------------------------------------------------#"
 
+echo "Setting variables for AWS Region ang SAM S3 Bucket"
 REGION=$(aws configure get region) || region="us-east-1"
 BUCKET=$(aws s3 ls |awk '{print $3}' |grep -E "^sam-[0-9]{12}-${REGION}" )
 
+echo "Getting KMS Key ID for SAM S3 Bucket"
 KMS=$(aws s3api get-bucket-encryption \
   --bucket "${BUCKET}" \
   --region "${REGION}" \
@@ -38,10 +40,10 @@ KMS=$(aws s3api get-bucket-encryption \
   --output text
   )
 
-echo "Deploying Serverless Application Function"
-
+echo "Building SAM Function"
 sam build -t "${FUNCTION_CFN}" --use-container --region "${REGION}"
 
+echo "Packaging SAM Function"
 sam package \
   --template-file .aws-sam/build/template.yaml \
   --s3-bucket "${BUCKET}" \
@@ -50,6 +52,7 @@ sam package \
   --region "${REGION}" \
   --output-template-file cloudformation/generated-sam-template.yaml
 
+echo "Deploying SAM Function"
 if [[ "${PARAM_OVERRIDE}" == "" ]]; then
   sam deploy \
     --stack-name ScanCodePipeline \
