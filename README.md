@@ -172,7 +172,7 @@ method is typically chosen when a Centralized Shared Services account or AWS Org
                 TemplatePath: Source::cloudformation/codepipeline-example.yaml
               RunOrder: 2
     ```
-  
+ 
 - Run the convert-2-dynamodb-item script to build the Rule to fit the DynamoDB format.
   ```bash
   python scripts/convert-2-dynamodb-item.py > new_initial-dynamodb-item.json
@@ -186,6 +186,9 @@ method is typically chosen when a Centralized Shared Services account or AWS Org
 End Result - Rule Example (located in DynamoDB):
 
 ![alt text](images/rule-example-dynamodb.png) 
+
+### What can NOT be added to a Governance Rule
+- [Intrinsic Functions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference.html)
 
 ## How does ScanCodepipeline Function get used in CodePipeline
 Example code from CodePipeline.yaml:

@@ -91,7 +91,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: main.lambda_handler
-      Runtime: python3.7
+      Runtime: python3.8
       FunctionName: ScanCodePipeline
       Description: This function will scan a CloudFormation template to ensure all Rules are met before updating
         the CloudFormation Stack.
