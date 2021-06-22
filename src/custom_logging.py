@@ -5,11 +5,8 @@ import logging
 import os
 
 
-class CustomLogger (object):
+class CustomLogger:
     """Sets up custom logger for lambda functions
-
-    Args:
-        object (str): Lambda Event
 
     Returns:
         class:
@@ -18,11 +15,10 @@ class CustomLogger (object):
         log_level = os.getenv('LOG_LEVEL', 'INFO')
         self._logger = logging.getLogger()
         self._logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
-        self._handler = self._logger.handlers[0]
+        self._handler = self._logger.handlers
 
         logging.getLogger("botocore").setLevel(logging.ERROR)
 
     @property
     def logger(self):
         return self._logger
-

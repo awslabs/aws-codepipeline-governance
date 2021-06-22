@@ -1,9 +1,9 @@
 # Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from custom_logging import CustomLogger
 from boto3.dynamodb.types import TypeDeserializer
 import boto3
+from custom_logging import CustomLogger
 
 logger = CustomLogger().logger
 
