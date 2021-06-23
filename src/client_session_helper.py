@@ -1,13 +1,10 @@
 # Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import boto3
+from custom_logging import CustomLogger
 
-logging.basicConfig()
-logger = logging.getLogger()
-logging.getLogger("botocore").setLevel(logging.ERROR)
-logger.setLevel(logging.INFO)
+logger = CustomLogger().logger
 
 
 def boto3_session(region=None, credentials=None, profile=None):
