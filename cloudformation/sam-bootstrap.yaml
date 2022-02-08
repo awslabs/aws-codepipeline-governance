@@ -71,7 +71,9 @@ Resources:
             Effect: Deny
             Principal: '*'
             Action: s3:*
-            Resource: !Sub ${rSAMBucket.Arn}/*
+            Resource:
+              - !Sub ${rSAMBucket.Arn}/*
+              - !Sub ${rSAMBucket.Arn}
             Condition:
               Bool:
                 aws:SecureTransport: 'false'
