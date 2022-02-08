@@ -29,7 +29,7 @@ echo "#     Building SAM Packages for ${BASE}                        "
 echo "#-------------------------------------------------------------#"
 
 echo "Setting variables for AWS Region ang SAM S3 Bucket"
-REGION=$(aws configure get region) || region="us-east-1"
+REGION=$(aws configure get region) || REGION="us-east-1"
 BUCKET=$(aws s3 ls |awk '{print $3}' |grep -E "^sam-[0-9]{12}-${REGION}" )
 
 echo "Getting KMS Key ID for SAM S3 Bucket"

@@ -46,7 +46,7 @@ method is typically chosen when a Centralized Shared Services account or AWS Org
 ### Deploy to Shared Services Account
 - Run the cloudformation/sam-bootstrap.yaml into the AWS Account. This will deploy an S3 Bucket and KMS Key for the use of the SAM deployment.
   ```bash
-  aws cloudformation create-stack --stack-name SAM-Bootstrap --template-body file://cloudformation/sam-bootstrap.yaml
+  aws cloudformation deploy --stack-name SAM-Bootstrap --template-file cloudformation/sam-bootstrap.yaml
   ```
 
 - Deploy the ScanCodePipeline Serverless Application Model (SAM) Lambda function and dependencies.
@@ -69,14 +69,14 @@ method is typically chosen when a Centralized Shared Services account or AWS Org
 - This deploys an IAM Role for the Lambda Function to assume back into the Pipeline Account to respond with the CodePipeline Status (Success | Failure)
   - Replace "123456789012" with AWS Account where the ScanCodePipeline Lambda Function was deployed
   ```bash
-  aws cloudformation create-stack --stack-name ScanCodePipelineAssumedRole --template-body file://cloudformation/assumed-iam-role.yaml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=pScanCodePipelineAccount,ParameterValue=123456789012
+  aws cloudformation deploy --stack-name ScanCodePipelineAssumedRole --template-file cloudformation/assumed-iam-role.yaml --capabilities CAPABILITY_NAMED_IAM --parameter-overrides pScanCodePipelineAccount=123456789012
   ````
   
 ### Deploy/Run CodePipeline Example
 - Deploy CodePipeline (w/ dependencies) CloudFormation template.
   - Replace "123456789012" with AWS Account where the ScanCodePipeline Lambda Function was deployed
   ```bash
-  aws cloudformation create-stack --stack-name ScanCodePipelineExample --template-body file://cloudformation/codepipeline-sep-acc-example.yaml --capabilities CAPABILITY_NAMED_IAM --parameters ParameterKey=pScanCodePipelineAccount,ParameterValue=123456789012 
+  aws cloudformation deploy --stack-name ScanCodePipelineExample --template-file cloudformation/codepipeline-sep-acc-example.yaml --capabilities CAPABILITY_NAMED_IAM --parameter-overrides pScanCodePipelineAccount=123456789012 
   ``` 
 
 - Zip up application directory.
@@ -95,7 +95,7 @@ method is typically chosen when a Centralized Shared Services account or AWS Org
 ### Deploy to AWS Account
 - Run the cloudformation/sam-bootstrap.yaml into the AWS Account. This will deploy an S3 Bucket and KMS Key for the use of the SAM deployment.
   ```bash
-  aws cloudformation create-stack --stack-name SAM-Bootstrap --template-body file://cloudformation/sam-bootstrap.yaml
+  aws cloudformation deploy --stack-name SAM-Bootstrap --template-file cloudformation/sam-bootstrap.yaml
   ```
   
 - Deploy the ScanCodePipeline Serverless Application Model (SAM) Lambda function and dependencies.
@@ -111,7 +111,7 @@ method is typically chosen when a Centralized Shared Services account or AWS Org
 ### Deploy/Run CodePipeline Example
 - Deploy CodePipeline (w/ dependencies) CloudFormation template.
   ```bash
-  aws cloudformation create-stack --stack-name ScanCodePipelineExample --template-body file://cloudformation/codepipeline-example.yaml --capabilities CAPABILITY_NAMED_IAM 
+  aws cloudformation deploy --stack-name ScanCodePipelineExample --template-file cloudformation/codepipeline-example.yaml --capabilities CAPABILITY_NAMED_IAM 
   ```
 
 - Zip up application directory.
